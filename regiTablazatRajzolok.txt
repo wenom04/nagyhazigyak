@@ -1,0 +1,32 @@
+/*A baloldali négyzetrács számozása és betűzése
+        for (int i = 1; i <= gridSizeVertical; i++) {
+            g.drawString(String.valueOf(i), gridSize/3, gridSize + i * gridSize - gridSize/3);
+        }
+
+        for (int i = 0; i < gridSizeHorizontal; i++) {
+            g.drawString(String.valueOf((char) ('A' + i)), gridSize + i * gridSize + gridSize/3, gridSize-gridSize/3);
+        }
+
+        //A jobboldali négyzetrács számozása és betűzése
+        for (int i = 1; i <= gridSizeVertical; i++) {
+            g.drawString(String.valueOf(i), (gridSizeHorizontal+1)*gridSize+gridSize/3, gridSize + i * gridSize - gridSize/3);
+        }
+
+        for (int i = 0; i < gridSizeHorizontal; i++) {
+            g.drawString(String.valueOf((char) ('A' + i)), (gridSizeHorizontal+2)*gridSize + i * gridSize + gridSize/3, gridSize-gridSize/3);
+        }
+*/
+
+/*A négyzetrácsok kirajzolása
+        for (int x = gridSize; x <= gridSizeHorizontal*gridSize; x += gridSize){
+            for (int y = gridSize; y <= gridSizeVertical*gridSize; y += gridSize) {
+                g.drawRect(x, y, gridSize, gridSize);
+            }
+        }
+
+        for (int x = (gridSizeHorizontal+2)*gridSize; x <= (2*gridSizeHorizontal+1)*gridSize; x += gridSize) {
+            for (int y = gridSize; y <= gridSizeVertical*gridSize; y += gridSize) {
+                g.drawRect(x, y, gridSize, gridSize);
+            }
+        }
+        */

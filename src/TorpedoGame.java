@@ -4,98 +4,109 @@ import java.awt.event.*;
 import java.util.*;
 
 public class TorpedoGame extends JPanel implements ActionListener {
-    private JButton newGame = new JButton("Új játék");
-    private JButton saveGame = new JButton("Mentés");
-    private JButton loadGame = new JButton("Játék visszaállítása");
-    private JButton backspace = new JButton("Vissza");
+    //A gombok, amiket a játékban használunk
+    private final JButton newGame = new JButton("Új játék");
+    private final JButton saveGame = new JButton("Mentés");
+    private final JButton backspace = new JButton("Vissza");
 
-    private JFrame frame;
+    //Entitások a játékhoz
+    private final Entity player;
+    private final Entity computer;
 
-    private static int gridSize = 60;
-    private static int frameWidth = 23*gridSize;
-    private static int frameHeight = 13*gridSize;
+    //A frame, amiben a játék fut
+    private final JFrame frame;
+    private final Board board;
+
+    //A négyzetrács mérete, az ablak szélessége és magassága
+    private static final int gridSize = 60;
+    static int frameWidth = 23*gridSize;
+    static int frameHeight = 13*gridSize;
     private static int gridSizeHorizontal = 10;
     private static int gridSizeVertical = 10;
 
-    private ArrayList<Point> clickPoints = new ArrayList<>();
-    private ArrayList<Point> shipPoints = new ArrayList<>();
-    private ArrayList<Point> botPoints = new ArrayList<>();
+    private static int numberOfShips;
+    private static int maxLength;
 
-    private boolean[][] hits = new boolean[10][10];
-    private boolean[][] ships = new boolean[10][10];
-    private boolean[][] shipsPlayer = new boolean[10][10];
-    private boolean[][] hitByBot = new boolean[10][10];
+    private ArrayList<Integer> shipLengths = new ArrayList<>();
+    //A 0. eleme a 2 hosszú hajók kellő száma, a 1. eleme a 3 hosszú hajók száma, stb.
+    private static int[] shipNums = new int[4];
 
-    private int shipCounter = 0;
-    private int foundShips = 0;
-    private int shipsFoundByBot = 0;
-
+    //A hajók elhelyezéséhez szükséges pontok
     private Point firstPoint = null;
     private Point lastPoint = null;
 
-    private boolean lastWasRemoved = false;
 
     private void drawShip(Point first, Point last) {
+        player.ships[firstPoint.x][firstPoint.y] = false;
         if (first.x == last.x) {
             // Vertical ship
             for (int y = Math.min(first.y, last.y); y <= Math.max(first.y, last.y); y++) {
-                shipPoints.add(new Point(first.x, y));
-                    shipsPlayer[first.x][y] = true;
+                player.ships[first.x][y] = true;
+                System.out.println(first.x + " " + y + " " + player.ships[first.x][y]);
+            }
+            shipLengths.add(Math.abs(first.y - last.y)+1);
+        } else if (first.y == last.y) {
+            // Horizontal ship
+            for (int x = Math.min(first.x, last.x); x <= Math.max(first.x, last.x); x++) {
+                System.out.println(x + " " + first.y);
+                player.ships[x][first.y] = true;
+            }
+            shipLengths.add(Math.abs(first.x - last.x)+1);
+        }
+    }
+
+    private boolean isOverlapping(Point first, Point last) {
+        player.ships[firstPoint.x][firstPoint.y] = false;
+        if (first.x == last.x) {
+            // Vertical ship
+            for (int y = Math.min(first.y, last.y); y <= Math.max(first.y, last.y); y++) {
+                System.out.println(first.x + " " + y);
+                if(player.ships[first.x][y]){
+                    return true;
+                }
             }
         } else if (first.y == last.y) {
             // Horizontal ship
             for (int x = Math.min(first.x, last.x); x <= Math.max(first.x, last.x); x++) {
-                shipPoints.add(new Point(x, first.y));
-                    shipsPlayer[x][first.y] = true;
-
+                System.out.println(x + " " + first.y);
+                if(player.ships[x][first.y]){
+                    return true;
+                }
             }
         }
-        shipCounter++;
+        return false;
     }
-    /*
-    public static void main(String[] args) {
-        JFrame frame = new JFrame("Torpedo");
-        TorpedoGame game = new TorpedoGame();
 
-        Random rand = new Random();
-        for (int i = 0; i < 10; i++) {
-            int x = rand.nextInt(10);
-            int y = rand.nextInt(10);
-            if (game.ships[x][y]) {
-                i--;
-            } else {
-                game.ships[x][y] = true;
-            }
-        }
+    public TorpedoGame(JFrame frame) {
+        this.frame = frame;
 
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(frameWidth, frameHeight);
-        frame.setResizable(true);
-        frame.add(game);
-        frame.setVisible(true);
-    }
-*/
-    public TorpedoGame() {
-        frame = new JFrame("Torpedo");
-        TorpedoGame game = this;
-        ImageIcon icon = new ImageIcon("./kepek/torpedoikonrendes.png");
-        frame.setIconImage(icon.getImage());
+        //Az entitások létrehozása
+        player = new Player(gridSizeHorizontal, gridSizeVertical);
+        computer = new Computer(gridSizeHorizontal, gridSizeVertical);
 
+        //buttonPanel létrehozása a gomboknak
         JPanel buttonPanel = new JPanel(new FlowLayout());
-        frame.setLayout(new BorderLayout());
+        setLayout(new BorderLayout());
+        numberOfShips = 0;
+        for(int i = 0; i < 4; i++){
+            numberOfShips += shipNums[i];
+        }
+        System.out.println("Number of ships: H " + numberOfShips);
+        board = new Board(gridSize, gridSizeHorizontal, gridSizeVertical, player, computer, numberOfShips);
+        add(board, BorderLayout.CENTER);
 
+        //ActionListnerek hozzáadása a gombokhoz
         newGame.addActionListener(this);
         saveGame.addActionListener(this);
-        loadGame.addActionListener(this);
         backspace.addActionListener(this);
 
+        //A gombok hozzáadása a panelhez
         buttonPanel.add(newGame);
         buttonPanel.add(saveGame);
-        buttonPanel.add(loadGame);
         buttonPanel.add(backspace);
-        frame.add(game, BorderLayout.NORTH);
-        frame.add(buttonPanel, BorderLayout.SOUTH);
+        add(buttonPanel, BorderLayout.SOUTH);
 
+        /*
         Random rand = new Random();
         for (int i = 0; i < 10; i++) {
             int x = rand.nextInt(10);
@@ -106,13 +117,7 @@ public class TorpedoGame extends JPanel implements ActionListener {
                 game.ships[x][y] = true;
             }
         }
-
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(frameWidth, frameHeight);
-        frame.setResizable(true);
-        frame.add(game);
-        frame.setVisible(true);
-
+        */
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -132,190 +137,214 @@ public class TorpedoGame extends JPanel implements ActionListener {
                 //System.out.println(gridShipY);
 
                 //Ha a kattintás a négyzetrácsokon belül van, akkor hozzáadjuk a kattintás helyét a clickPoints listához
-                if (shipCounter >= 3 && gridX >= 0 && gridX < gridSizeHorizontal && gridY >= 0 && gridY < gridSizeVertical) {
-                    if(!clickPoints.contains(new Point(gridX, gridY))){
-                        clickPoints.add(new Point(gridX, gridY));
-                        repaint();
+                if (shipLengths.size() >= numberOfShips && gridX >= 0 && gridX < gridSizeHorizontal && gridY >= 0 && gridY < gridSizeVertical) {
+                    if(!player.clickedPoints.contains(new Point(gridX, gridY))){
+                        player.clickedPoints.add(new Point(gridX, gridY));
+                        board.repaint();
                     }
                 }
 
-                if (shipCounter < 3 && gridShipX >= 0 && gridShipX < gridSizeHorizontal && gridShipY >= 0 && gridShipY < gridSizeVertical) {
-                    if (!shipPoints.contains(new Point(gridShipX, gridShipY))) {
-                        shipPoints.add(new Point(gridShipX, gridShipY));
-                        shipsPlayer[gridShipX][gridShipY] = true;
-                        if (firstPoint==null) {
+                if (shipLengths.size() < numberOfShips && gridShipX >= 0 && gridShipX < gridSizeHorizontal && gridShipY >= 0 && gridShipY < gridSizeVertical) {
+                    if (firstPoint==null) {
+                        if(!player.ships[gridShipX][gridShipY]) {
                             firstPoint = new Point(gridShipX, gridShipY);
-                        } else {
-                            lastPoint = new Point(gridShipX, gridShipY);
-                            if((firstPoint.x == lastPoint.x && Math.abs(firstPoint.y - lastPoint.y) < 5) ||
-                                    (firstPoint.y == lastPoint.y && Math.abs(firstPoint.x - lastPoint.x) < 5))
-                            {
-                                drawShip(firstPoint, lastPoint);
-                            }
-                            else{
-                                System.out.println("Igy nem lehet hajot elhelyezni te kis buzi!");
-                                shipsPlayer[firstPoint.x][firstPoint.y] = false;
-                                shipsPlayer[lastPoint.x][lastPoint.y] = false;
-                                shipPoints.remove(firstPoint);
-                                shipPoints.remove(lastPoint);
-                            }
-                            firstPoint = null;
-                            lastPoint = null;
+                            player.ships[firstPoint.x][firstPoint.y] = true;
+                            repaint();
                         }
-                        repaint();
+                    } else {
+                        lastPoint = new Point(gridShipX, gridShipY);
+                        //Azt vizsgálom, hogy két hajó nincs-e egymáson, a hajó hossza 1 és maxLength között van-e
+                        //és hogy a hajók száma nem haladja-e meg a megadott értéket
+                        if (!isOverlapping(firstPoint, lastPoint) && ((firstPoint.x == lastPoint.x && TorpedoGame.between(Math.abs(firstPoint.y - lastPoint.y),1, maxLength) && getShipNumByLen(Math.abs(firstPoint.y - lastPoint.y) + 1) < shipNums[Math.abs(firstPoint.y - lastPoint.y)-1]) ||
+                                (firstPoint.y == lastPoint.y && TorpedoGame.between(Math.abs(firstPoint.x - lastPoint.x),1, maxLength) && getShipNumByLen(Math.abs(firstPoint.x - lastPoint.x) + 1) < shipNums[Math.abs(firstPoint.x - lastPoint.x)-1]))) {
+                            drawShip(firstPoint, lastPoint);
+                            board.addOneToShipCounter();
+                            if (shipLengths.size() == numberOfShips) {
+                                System.out.println("Minden hajó el lett helyezve.");
+                            }
+                        }
+                        else{
+                            System.out.println("Igy nem lehet hajot elhelyezni te kis buzi!");
+                            player.ships[firstPoint.x][firstPoint.y] = false;
+                        }
+                        firstPoint = null;
+                        lastPoint = null;
+                    }
+                    repaint();
                     }
                 }
-            }
+
         });
     }
 
-    @Override
-    public void paint(Graphics g) {
-        super.paint(g);
-
-        setBackground(new Color(52, 61, 235));
-        g.setColor(Color.WHITE);
-        g.setFont(new Font("Arial", Font.BOLD, gridSize/3));
-
-        //A négyzetrácsok kirajzolása
-        for (int x = gridSize; x <= gridSizeHorizontal*gridSize; x += gridSize){
-            for (int y = gridSize; y <= gridSizeVertical*gridSize; y += gridSize) {
-                g.drawRect(x, y, gridSize, gridSize);
-            }
-        }
-
-        for (int x = (gridSizeHorizontal+2)*gridSize; x <= (2*gridSizeHorizontal+1)*gridSize; x += gridSize) {
-            for (int y = gridSize; y <= gridSizeVertical*gridSize; y += gridSize) {
-                g.drawRect(x, y, gridSize, gridSize);
-            }
-        }
-
-        //A baloldali négyzetrács számozása és betűzése
-        for (int i = 1; i <= gridSizeVertical; i++) {
-            g.drawString(String.valueOf(i), gridSize/3, gridSize + i * gridSize - gridSize/3);
-        }
-
-        for (int i = 0; i < gridSizeHorizontal; i++) {
-            g.drawString(String.valueOf((char) ('A' + i)), gridSize + i * gridSize + gridSize/3, gridSize-gridSize/3);
-        }
-
-        //A jobboldali négyzetrács számozása és betűzése
-        for (int i = 1; i <= gridSizeVertical; i++) {
-            g.drawString(String.valueOf(i), (gridSizeHorizontal+1)*gridSize+gridSize/3, gridSize + i * gridSize - gridSize/3);
-        }
-
-        for (int i = 0; i < gridSizeHorizontal; i++) {
-            g.drawString(String.valueOf((char) ('A' + i)), (gridSizeHorizontal+2)*gridSize + i * gridSize + gridSize/3, gridSize-gridSize/3);
-        }
-
-        int botRandomX;
-        int botRandomY;
-        Random rand = new Random();
-
-
-        for (Point p : clickPoints) {
-            // 12*gridSize azért kell, mert a jobboldali négyzetrácsok innen kezdődnek
-            // a p egy 0 és 10 közötti szám, amit meg kell szorozni 30-al, mert a négyzetrácsok 30x30-asak
-            // a 15 azért kell, mert a kör középpontját kell meghatározni
-            int centerX = (gridSizeHorizontal+2)*gridSize + p.x * gridSize + gridSize/2;
-            // a y koordinátát is ugyanúgy kell meghatározni, mint az x-et
-            // de itt csak 30-at kell hozzáadni
-            int centerY = gridSize + p.y * gridSize + gridSize/2;
-
-            if (ships[p.x][p.y] && !hits[p.x][p.y]) {
-                foundShips++;
-                System.out.println("Found ships: " + foundShips);
-                hits[p.x][p.y] = true;
-            }
-
-            if (ships[p.x][p.y]) {
-                g.setColor(Color.RED);
-            } else {
-                g.setColor(Color.WHITE);
-            }
-            // A -gridSize / 6 azért kell, mert a kört, a négyzet bal felső sarkából rajzolja
-            g.fillOval(centerX - gridSize / 6, centerY - gridSize / 6, gridSize / 3, gridSize / 3);
-
-
-        }
-        if (shipCounter >= 3 && !lastWasRemoved) {
-            botRandomX = rand.nextInt(gridSizeHorizontal);
-            botRandomY = rand.nextInt(gridSizeVertical);
-            Point botShot = new Point(botRandomX, botRandomY);
-            System.out.println(botRandomX + "BotX");
-            System.out.println(botRandomY + "BotY");
-            System.out.println("/n");
-
-
-            if(!botPoints.contains(botShot)) {
-                botPoints.add(botShot);
-                if(shipsPlayer[botRandomX][botRandomY] && !hitByBot[botRandomX][botRandomY]) {
-                    shipsFoundByBot++;
-                    System.out.println("Ships found by bot: " + shipsFoundByBot);
-                    hitByBot[botRandomX][botRandomY] = true;
-                }
-            }
-            lastWasRemoved = false;
-        }
-
-
-        for(Point p : shipPoints) {
-            int rectX = p.x * gridSize + gridSize;
-            int rectY = p.y * gridSize + gridSize;
-
-            g.setColor(Color.GRAY);
-            g.fillRect(rectX, rectY, gridSize, gridSize);
-        }
-        for(Point p: botPoints) {
-            if (shipsPlayer[p.x][p.y]) {
-                g.setColor(Color.RED);
-            } else {
-                g.setColor(Color.WHITE);
-            }
-            int centerX = gridSize + p.x * gridSize + gridSize/2;
-            int centerY = gridSize + p.y * gridSize + gridSize/2;
-            // A -gridSize / 6 azért kell, mert a kört, a négyzet bal felső sarkából rajzolja
-            g.fillOval(centerX - gridSize / 6, centerY - gridSize / 6, gridSize / 3, gridSize / 3);
-        }
-        if(foundShips == 10) {
-            g.setColor(Color.GREEN);
-            g.drawString("You won!", 12*gridSize, 11*gridSize);
-        } else if (shipsFoundByBot == 10) {
-            g.setColor(Color.RED);
-            g.drawString("You lost!", 12*gridSize, 11*gridSize);
-
-        }
-    }
+//    @Override
+//    public void paint(Graphics g) {
+//        super.paint(g);
+//
+//        setBackground(new Color(52, 61, 235));
+//        g.setColor(Color.WHITE);
+//        g.setFont(new Font("Arial", Font.BOLD, gridSize/3));
+//
+//        drawGrid(g, false);
+//        drawGrid(g, true);
+//
+//
+//        int botRandomX;
+//        int botRandomY;
+//        Random rand = new Random();
+//
+//
+//        for (Point p : player.clickedPoints) {
+//            // 12*gridSize azért kell, mert a jobboldali négyzetrácsok innen kezdődnek
+//            // a p egy 0 és 10 közötti szám, amit meg kell szorozni 30-al, mert a négyzetrácsok 30x30-asak
+//            // a 15 azért kell, mert a kör középpontját kell meghatározni
+//            int centerX = (gridSizeHorizontal+2)*gridSize + p.x * gridSize + gridSize/2;
+//            // a y koordinátát is ugyanúgy kell meghatározni, mint az x-et
+//            // de itt csak 30-at kell hozzáadni
+//            int centerY = gridSize + p.y * gridSize + gridSize/2;
+//
+//            if (computer.ships[p.x][p.y] && !player.shots[p.x][p.y]) {
+//                foundShips++;
+//                System.out.println("Found ships: " + foundShips);
+//                player.shots[p.x][p.y] = true;
+//            }
+//
+//            if (computer.ships[p.x][p.y]) {
+//                g.setColor(Color.RED);
+//            } else {
+//                g.setColor(Color.WHITE);
+//            }
+//            // A -gridSize / 6 azért kell, mert a kört, a négyzet bal felső sarkából rajzolja
+//            g.fillOval(centerX - gridSize / 6, centerY - gridSize / 6, gridSize / 3, gridSize / 3);
+//
+//
+//        }
+//        if (shipCounter >= numberOfShips) {
+//            Point botShot;
+//            do {
+//                botRandomX = rand.nextInt(gridSizeHorizontal);
+//                botRandomY = rand.nextInt(gridSizeVertical);
+//                botShot = new Point(botRandomX, botRandomY);
+//            } while (computer.clickedPoints.contains(botShot) && !lastWasRemoved);
+//            computer.clickedPoints.add(botShot);
+//
+//            System.out.println(botRandomX + "BotX");
+//            System.out.println(botRandomY + "BotY");
+//            System.out.println("/n");
+//
+//            if (player.ships[botRandomX][botRandomY] && !computer.shots[botRandomX][botRandomY]) {
+//                shipsFoundByBot++;
+//                System.out.println("Ships found by bot: " + shipsFoundByBot);
+//                computer.shots[botRandomX][botRandomY] = true;
+//            }
+//
+//            lastWasRemoved = false;
+//        }
+//
+//
+//        for(int i = 0; i < 10; i++) {
+//            for(int j = 0; j < 10; j++) {
+//                if(player.ships[i][j]) {
+//                    g.setColor(Color.GRAY);
+//                    g.fillRect(i * gridSize + gridSize, j * gridSize + gridSize, gridSize, gridSize);
+//                }
+//            }
+//        }
+//
+//        for(Point p: computer.clickedPoints) {
+//            if (player.ships[p.x][p.y]) {
+//                g.setColor(Color.RED);
+//            } else {
+//                g.setColor(Color.WHITE);
+//            }
+//            int centerX = gridSize + p.x * gridSize + gridSize/2;
+//            int centerY = gridSize + p.y * gridSize + gridSize/2;
+//            // A -gridSize / 6 azért kell, mert a kört, a négyzet bal felső sarkából rajzolja
+//            g.fillOval(centerX - gridSize / 6, centerY - gridSize / 6, gridSize / 3, gridSize / 3);
+//        }
+//        if(foundShips == 10) {
+//            g.setColor(Color.GREEN);
+//            g.drawString("You won!", 12*gridSize, 11*gridSize);
+//        } else if (shipsFoundByBot == 10) {
+//            g.setColor(Color.RED);
+//            g.drawString("You lost!", 12*gridSize, 11*gridSize);
+//
+//        }
+//    }
 
     @Override
     public void actionPerformed(ActionEvent e) {
         if(e.getSource()==newGame) {
-            frame.dispose();
-            new TorpedoGame();
+            System.out.println(shipLengths);
+            TorpedoGame game = new TorpedoGame(frame);
+            pageFunction.pageRefresher(frame, game);
         }
         if(e.getSource()==saveGame) {
             //saveGame();
         }
-        if(e.getSource()==loadGame) {
-            //loadGame();
-        }
         if(e.getSource()==backspace) {
-            Point last = clickPoints.getLast();
-            clickPoints.remove(last);
-            lastWasRemoved = true;
-            repaint();
+            if(!player.clickedPoints.isEmpty()) {
+                Point last = player.clickedPoints.getLast();
+                player.clickedPoints.remove(last);
+                repaint();
+            }
         }
     }
 
     public static void setGridSizeHorizontal(String gridSizeHorizontal) {
-        int gridSizeH = Integer.parseInt((String) gridSizeHorizontal);
-        TorpedoGame.gridSizeHorizontal = gridSizeH;
+        TorpedoGame.gridSizeHorizontal = Integer.parseInt(gridSizeHorizontal);
     }
 
     public static void setGridSizeVertical(String gridSizeVertical) {
-        int gridSizeV = Integer.parseInt((String) gridSizeVertical);
-        TorpedoGame.gridSizeVertical = gridSizeV;
+        TorpedoGame.gridSizeVertical = Integer.parseInt(gridSizeVertical);
     }
 
+    public static void setMaxShipLength(int maxShipLength) {
+        maxLength = Math.max(maxShipLength, maxLength);
+    }
 
+    public int getShipNumByLen(int len){
+        System.out.println(len);
+        int count = 0;
+        for (int i : shipLengths){
+            if (i == len){
+                count++;
+            }
+        }
+        return count;
+    }
+
+    public static void setShipLen(int num, int idx){
+        shipNums[idx] = num;
+    }
+
+    public static boolean between(int value, int min, int max) {
+        return value > min && value < max;
+    }
+//    private void drawGrid(Graphics g, boolean isOnRight){
+//        int fromGridX = gridSize;
+//        int toGridX = gridSizeHorizontal*gridSize;
+//        int stringNumbersX = gridSize/3;
+//        int stringLettersX = gridSize;
+//
+//        if (isOnRight){
+//            fromGridX = (gridSizeHorizontal+2)*gridSize;
+//            toGridX = (2*gridSizeHorizontal+1)*gridSize;
+//            stringNumbersX = (gridSizeHorizontal+1)*gridSize+gridSize/3;
+//            stringLettersX = (gridSizeHorizontal+2)*gridSize;
+//
+//        }
+//        for (int x = fromGridX; x <= toGridX; x += gridSize){
+//            for (int y = gridSize; y <= gridSizeVertical*gridSize; y += gridSize) {
+//                g.drawRect(x, y, gridSize, gridSize);
+//            }
+//        }
+//        for (int i = 1; i <= gridSizeVertical; i++) {
+//            g.drawString(String.valueOf(i), stringNumbersX, gridSize + i * gridSize - gridSize/3);
+//        }
+//
+//        for (int i = 0; i < gridSizeHorizontal; i++) {
+//            g.drawString(String.valueOf((char) ('A' + i)), stringLettersX + i * gridSize + gridSize/3, gridSize-gridSize/3);
+//        }
+//
 }
