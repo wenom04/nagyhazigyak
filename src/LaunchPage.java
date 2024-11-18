@@ -6,6 +6,8 @@ public class LaunchPage extends JPanel implements ActionListener {
     boolean visible = true;
     Image backgroundImg;
 
+    private boolean wereShipsSelected = false;
+
     JButton myButton = new JButton("Új játék");
     private JButton loadGame = new JButton("Játék visszaállítása");
     JComboBox myComboBox;
@@ -27,7 +29,6 @@ public class LaunchPage extends JPanel implements ActionListener {
     JLabel horizontalLabel = new JLabel("Vízszintes méret:");
     JLabel verticalLabel = new JLabel("Függőleges méret:");
 
-    private int shipNum = 0;
     private int maxLength;
 
 
@@ -137,6 +138,7 @@ public class LaunchPage extends JPanel implements ActionListener {
                 maxLength = Math.max(maxLength, 2);
             }
             TorpedoGame.setShipLen(Integer.parseInt(s),0);
+            wereShipsSelected = true;
         }
         if(e.getSource()==ship3Num) {
             s = ship3Num.getSelectedItem().toString();
@@ -144,6 +146,7 @@ public class LaunchPage extends JPanel implements ActionListener {
                 maxLength = Math.max(maxLength, 3);
             }
             TorpedoGame.setShipLen(Integer.parseInt(s),1);
+            wereShipsSelected = true;
         }
         if(e.getSource()==ship4Num) {
             s = ship4Num.getSelectedItem().toString();
@@ -151,6 +154,7 @@ public class LaunchPage extends JPanel implements ActionListener {
                 maxLength = Math.max(maxLength, 4);
             }
             TorpedoGame.setShipLen(Integer.parseInt(s),2);
+            wereShipsSelected = true;
         }
         if(e.getSource()==ship5Num) {
             s = ship5Num.getSelectedItem().toString();
@@ -158,6 +162,7 @@ public class LaunchPage extends JPanel implements ActionListener {
                 maxLength = Math.max(maxLength, 5);
             }
             TorpedoGame.setShipLen(Integer.parseInt(s),3);
+            wereShipsSelected = true;
         }
     }
 
@@ -171,18 +176,16 @@ public class LaunchPage extends JPanel implements ActionListener {
         return visible;
     }
 
-    public int getShipNum(){
-        return shipNum;
-    }
-
-    public int getMaxLength(){
-        return maxLength;
-    }
-
     public void pageRefresh(JFrame frame){
-        TorpedoGame.setMaxShipLength(this.getMaxLength());
+        if (!wereShipsSelected){
+            JOptionPane.showMessageDialog(frame, "Válassz ki legalább egy hajót!", "Hiba", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
         TorpedoGame game = new TorpedoGame(frame);
+        game.setMaxShipLength(maxLength);
         pageFunction.pageRefresher(frame, game);
     }
+
+    
 }
 

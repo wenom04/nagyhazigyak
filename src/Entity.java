@@ -1,10 +1,11 @@
 import java.awt.*;
 import java.util.ArrayList;
 
-public class Entity {
+public abstract class Entity {
     boolean[][] ships;
     boolean[][] shots;
     ArrayList<Point> clickedPoints = new ArrayList<>();
+    ArrayList<Ship> shipsList = new ArrayList<>();
 
     public Entity(int gridSizeHorizontal, int gridSizeVertical) {
         ships = new boolean[gridSizeHorizontal][gridSizeVertical];
@@ -16,4 +17,11 @@ public class Entity {
             }
         }
     }
+
+    public void placeShips(int[] shipNums, int gridSizeHorizontal, int gridSizeVertical) {}
+
+    public abstract Point randomShot(Entity p, int gridSizeHorizontal, int gridSizeVertical, boolean wasHit);
+
+    public abstract Point targetedShot(Entity player, Point p, int gridSizeHorizontal, int gridSizeVertical);
+
 }

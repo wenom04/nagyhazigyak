@@ -14,6 +14,7 @@ public class Main {
         frame.add(launchPage, BorderLayout.CENTER);
         frame.setSize(600, 600);
 
+        frame.setLocationRelativeTo(null);
     }
 }
 

@@ -9,18 +9,18 @@ public class Board extends JPanel {
     private Entity player;
     private Entity computer;
     private int numberOfShips;
-    int foundShips = 0;
-    int shipsFoundByBot = 0;
+    private TorpedoGame game;
     int shipCounter = 0;
 
-    public Board(int gridSize, int gridSizeHorizontal, int gridSizeVertical, Entity player, Entity computer, int numberOfShips) {
+    public Board(int gridSize, int gridSizeHorizontal, int gridSizeVertical, Entity player, Entity computer, int numberOfShips, TorpedoGame game) {
         this.gridSize = gridSize;
         this.gridSizeHorizontal = gridSizeHorizontal;
         this.gridSizeVertical = gridSizeVertical;
         this.player = player;
         this.computer = computer;
         this.numberOfShips = numberOfShips;
-        System.out.println("Number of ships: L" + numberOfShips);
+        this.game = game;
+        //System.out.println("Number of ships: L" + numberOfShips);
     }
 
     private void drawGrid(Graphics g, boolean isOnRight){
@@ -77,8 +77,8 @@ public class Board extends JPanel {
             int centerY = gridSize + p.y * gridSize + gridSize/2;
 
             if (computer.ships[p.x][p.y] && !player.shots[p.x][p.y]) {
-                foundShips++;
-                System.out.println("Found ships: " + foundShips);
+//                foundShips++;
+//                System.out.println("Found ships: " + foundShips);
                 player.shots[p.x][p.y] = true;
             }
 
@@ -92,20 +92,14 @@ public class Board extends JPanel {
 
 
         }
-        if (shipCounter == numberOfShips) {
-            Point botShot;
-            do {
-                botRandomX = rand.nextInt(gridSizeHorizontal);
-                botRandomY = rand.nextInt(gridSizeVertical);
-                botShot = new Point(botRandomX, botRandomY);
-            } while (computer.clickedPoints.contains(botShot));
-            computer.clickedPoints.add(botShot);
+        Point lastHit = new Point();
+        boolean wasHit = false;
 
-            if (player.ships[botRandomX][botRandomY] && !computer.shots[botRandomX][botRandomY]) {
-                shipsFoundByBot++;
-                System.out.println("Ships found by bot: " + shipsFoundByBot);
-                computer.shots[botRandomX][botRandomY] = true;
-            }
+        if (shipCounter == numberOfShips) {
+            computer.randomShot(player, gridSizeHorizontal, gridSizeVertical, wasHit);
+
+            game.checkAllShips(computer, player);
+            game.checkAllShips(player, computer);
         }
 
 
@@ -115,6 +109,10 @@ public class Board extends JPanel {
                     g.setColor(Color.GRAY);
                     g.fillRect(i * gridSize + gridSize, j * gridSize + gridSize, gridSize, gridSize);
                 }
+//                if(computer.ships[i][j]) {
+//                    g.setColor(Color.GRAY);
+//                    g.fillRect(i * gridSize + (gridSizeHorizontal+2) * gridSize, j * gridSize + gridSize, gridSize, gridSize);
+//                }
             }
         }
 
@@ -129,13 +127,10 @@ public class Board extends JPanel {
             // A -gridSize / 6 azért kell, mert a kört, a négyzet bal felső sarkából rajzolja
             g.fillOval(centerX - gridSize / 6, centerY - gridSize / 6, gridSize / 3, gridSize / 3);
         }
-        if(foundShips == 10) {
-            g.setColor(Color.GREEN);
-            g.drawString("You won!", 12*gridSize, 11*gridSize);
-        } else if (shipsFoundByBot == 10) {
-            g.setColor(Color.RED);
-            g.drawString("You lost!", 12*gridSize, 11*gridSize);
-
+        if(game.areAllShipsSunk(game.getComputer()) && !player.clickedPoints.isEmpty() && !computer.shipsList.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "You won!");
+        } else if (game.areAllShipsSunk(game.getPlayer()) && !player.clickedPoints.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "You lost!", "Game over", JOptionPane.OK_OPTION);
         }
     }
 
