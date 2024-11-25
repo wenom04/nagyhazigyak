@@ -1,7 +1,8 @@
 import java.awt.*;
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public abstract class Entity {
+public abstract class Entity implements Serializable {
     boolean[][] ships;
     boolean[][] shots;
     ArrayList<Point> clickedPoints = new ArrayList<>();
@@ -20,8 +21,20 @@ public abstract class Entity {
 
     public void placeShips(int[] shipNums, int gridSizeHorizontal, int gridSizeVertical) {}
 
-    public abstract Point randomShot(Entity p, int gridSizeHorizontal, int gridSizeVertical, boolean wasHit);
+    public Point randomShot(Entity p, int gridSizeHorizontal, int gridSizeVertical){
+        return null;
+    }
 
-    public abstract Point targetedShot(Entity player, Point p, int gridSizeHorizontal, int gridSizeVertical);
+    public Point targetedShot(Entity player, int gridSizeHorizontal, int gridSizeVertical){
+        return null;
+    }
+
+    public void setShips(boolean[][] ships) {
+        this.ships = ships;
+    }
+
+    public void setShots(boolean[][] shots) {
+        this.shots = shots;
+    }
 
 }

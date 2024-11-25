@@ -1,36 +1,53 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TorpedoGame extends JPanel implements ActionListener, MouseListener {
     //A gomb, ami a visszavonást végzi
-    private final JButton backspace = new JButton("Vissza");
+    private JButton backspace = new JButton("Vissza");
+    //A visszavonás után, hogy ne történjen meg újra a visszavonás/ne jelölhessen egyből a gép
+    boolean wasLastRemoved = false;
+    //Ne vonhasson vissza a játékos egymás után többször, csak egyszer
+    private int clickCount = 0;
 
+    //Menüpontok
     JMenuItem newGame = new JMenuItem("Új játék");
     JMenuItem saveGame = new JMenuItem("Mentés");
+    JMenuItem loadGame = new JMenuItem("Betöltés");
 
+    //Menü
     JMenu menu = new JMenu("Menü");
 
     //Entitások a játékhoz
-    private final Entity player;
-    private final Entity computer;
+    private Player player;
+    private Computer computer;
 
     //A frame, amiben a játék fut
-    private final JFrame frame;
-    private final Board board;
+    private JFrame frame;
+
+    //A játéktábla
+    private Board board;
 
     //A négyzetrács mérete, az ablak szélessége és magassága
-    private static final int gridSize = 60;
+    private static int gridSize = 60;
     private static int frameWidth = 23*gridSize;
     private static int frameHeight = 13*gridSize;
     private static int gridSizeHorizontal = 10;
     private static int gridSizeVertical = 10;
 
+    //A hajók száma és maximális hossza
     private int numberOfShips;
     private int maxLength;
+    private int alreadyPlacedShipsNum = 0;
 
-    private ArrayList<Integer> shipLengths = new ArrayList<>();
+    //A hajók hosszának listája
+    private List<Integer> shipLengths = new ArrayList<>();
+
     //A 0. eleme a 2 hosszú hajók kellő száma, a 1. eleme a 3 hosszú hajók száma, stb.
     private static int[] shipNums = new int[4];
 
@@ -38,9 +55,14 @@ public class TorpedoGame extends JPanel implements ActionListener, MouseListener
     private Point firstPoint = null;
     private Point lastPoint = null;
 
-    private void drawShip(Point first, Point last) {
+    /**
+     * A hajók elhelyezésének metódusa, a két pont között lévő mezőket igazzá teszi a player.ships[][] tömbben
+     * @param first az első kattintás helye
+     * @param last az utolsó kattintás helye
+     */
+    public void drawShip(Point first, Point last) {
         ArrayList<Point> shipCoordinates = new ArrayList<>();
-        player.ships[firstPoint.x][firstPoint.y] = false;
+        //player.ships[firstPoint.x][firstPoint.y] = false;
         if (first.x == last.x) {
             // Vertical ship
             for (int y = Math.min(first.y, last.y); y <= Math.max(first.y, last.y); y++) {
@@ -58,26 +80,44 @@ public class TorpedoGame extends JPanel implements ActionListener, MouseListener
         }
         player.shipsList.add(new Ship(shipCoordinates));
         shipLengths.add(shipCoordinates.size());
+        board.addOneToShipCounter();
+        alreadyPlacedShipsNum++;
     }
 
-    private boolean isShipSunk(Ship ship, Entity e) {
+    /**
+     * A hajó elsüllyedéséhez a hajó minden pontjának igaznak kell lennie a shots[][] tömbben
+     * @param ship a hajó, amit vizsgálunk
+     * @param e az entitás, amit vizsgálunk
+     * @return igaz, ha a hajó elsüllyedt
+     */
+    public boolean isShipSunk(Ship ship, Entity e) {
         for (Point p : ship.getCoordinates()) {
             if (!e.shots[p.x][p.y]) {
                 return false;
             }
         }
-        ship.setSunk();
         return true;
     }
 
+    /**
+     * Az összes hajó elsüllyedését vizsgálja
+     * @param e az entitás, amely hajóit vizsgálunk
+     * @param e2 a másik entitás, aminek a lövéseit vizsgáljuk
+     */
     public void checkAllShips(Entity e, Entity e2) {
         for (Ship ship : e.shipsList) {
             if (!ship.isSunk() && isShipSunk(ship, e2)) {
-                System.out.println("Egy "+ ship.getLength() +" hosszú hajó elsüllyedt.");
+                numberOfShips--;
+                ship.setSunk();
             }
         }
     }
 
+    /**
+     * Az összes hajó elsüllyedését vizsgálja
+     * @param e az entitás, amely hajóit vizsgáljuk
+     * @return igaz, ha az összes hajó elsüllyedt
+     */
     public boolean areAllShipsSunk(Entity e) {
         for (Ship ship : e.shipsList) {
             if (!ship.isSunk()) {
@@ -87,8 +127,14 @@ public class TorpedoGame extends JPanel implements ActionListener, MouseListener
         return true;
     }
 
-    private boolean isOverlapping(Point first, Point last) {
-        player.ships[firstPoint.x][firstPoint.y] = false;
+    /**
+     * Azt vizsgálja, hogy nem-e fedik egymást a hajók
+     * @param first az első kattintás helye, a hajó első cellája
+     * @param last a másik kattintás helye, a hajó utolsó cellája
+     * @return igaz, ha a hajók fedik egymást
+     */
+    public boolean isOverlapping(Point first, Point last) {
+        player.ships[first.x][first.y] = false;
         if (first.x == last.x) {
             // Vertical ship
             for (int y = Math.min(first.y, last.y); y <= Math.max(first.y, last.y); y++) {
@@ -109,17 +155,38 @@ public class TorpedoGame extends JPanel implements ActionListener, MouseListener
         return false;
     }
 
-    public TorpedoGame(JFrame frame) {
+    /**
+     * A játék konstruktora, a játék elindításához szükséges inicializálásokat végzi, visszaállított játék esetén kell használni
+     * @param frame a frame, amiben a játék fut
+     * @param player a játékos
+     * @param computer a gép
+     */
+    public TorpedoGame(JFrame frame, Player player, Computer computer) {
         this.frame = frame;
+        this.player = player;
+        this.computer = computer;
+        newGame();
+    }
 
-        //Az entitások létrehozása
+    /**
+     * A játék konstruktora, a játék elindításához szükséges inicializálásokat végzi, új játék kezdésekor kell használni
+     * @param frame a frame, amiben a játék fut
+     */
+    public TorpedoGame(JFrame frame){
+        this.frame = frame;
         player = new Player(gridSizeHorizontal, gridSizeVertical);
         computer = new Computer(gridSizeHorizontal, gridSizeVertical);
 
         computer.placeShips(shipNums, gridSizeHorizontal, gridSizeVertical);
-//        for(int i : shipNums){
-//            System.out.println(i);
-//        }
+        newGame();
+    }
+
+    /**
+     * A játék elindításához szükséges inicializálásokat végzi
+     */
+    private void newGame() {
+        System.out.println("A játék elindult.");
+
         //buttonPanel létrehozása a gomboknak
         JPanel buttonPanel = new JPanel(new FlowLayout());
         setLayout(new BorderLayout());
@@ -138,9 +205,13 @@ public class TorpedoGame extends JPanel implements ActionListener, MouseListener
         newGame.addActionListener(this);
         saveGame.setActionCommand("saveGame");
         saveGame.addActionListener(this);
+        loadGame.setActionCommand("loadGame");
+        loadGame.addActionListener(this);
+
 
         menu.add(newGame);
         menu.add(saveGame);
+        menu.add(loadGame);
 
         JMenuBar bar = new JMenuBar();
         bar.add(menu);
@@ -157,17 +228,23 @@ public class TorpedoGame extends JPanel implements ActionListener, MouseListener
     @Override
     public void actionPerformed(ActionEvent e) {
         if(e.getSource()==newGame) {
+            int temp = maxLength;
             TorpedoGame game = new TorpedoGame(frame);
+            game.setMaxShipLength(temp);
             pageFunction.pageRefresher(frame, game);
         }
         if(e.getSource()==saveGame) {
-            //saveGame();
+            FileHandler gamestate = new FileHandler(player, computer, gridSizeHorizontal, gridSizeVertical, maxLength, shipNums, shipLengths, alreadyPlacedShipsNum);
+            FileHandler.saveGame(gamestate);
+            System.out.println("Játék mentve.");
+            System.exit(0);
         }
         if(e.getSource()==backspace) {
-            if(!player.clickedPoints.isEmpty()) {
+            if(!player.clickedPoints.isEmpty() && !wasLastRemoved){
                 Point last = player.clickedPoints.getLast();
                 player.clickedPoints.remove(last);
                 repaint();
+                wasLastRemoved = true;
             }
         }
     }
@@ -194,10 +271,18 @@ public class TorpedoGame extends JPanel implements ActionListener, MouseListener
             if(!player.clickedPoints.contains(new Point(gridX, gridY))){
                 player.clickedPoints.add(new Point(gridX, gridY));
                 board.repaint();
+                if(wasLastRemoved){
+                    clickCount++;
+                }
+                if(wasLastRemoved && clickCount == 2){
+                    clickCount = 0;
+                    wasLastRemoved = false;
+                }
                 checkAllShips(player, computer);
                 checkAllShips(computer, player);
             }
         }
+
 
         if (shipLengths.size() < numberOfShips && gridShipX >= 0 && gridShipX < gridSizeHorizontal && gridShipY >= 0 && gridShipY < gridSizeVertical) {
             if (firstPoint==null) {
@@ -213,7 +298,6 @@ public class TorpedoGame extends JPanel implements ActionListener, MouseListener
                 if (!isOverlapping(firstPoint, lastPoint) && ((firstPoint.x == lastPoint.x && TorpedoGame.between(Math.abs(firstPoint.y - lastPoint.y),1, maxLength) && getShipNumByLen(Math.abs(firstPoint.y - lastPoint.y) + 1) < shipNums[Math.abs(firstPoint.y - lastPoint.y)-1]) ||
                         (firstPoint.y == lastPoint.y && TorpedoGame.between(Math.abs(firstPoint.x - lastPoint.x),1, maxLength) && getShipNumByLen(Math.abs(firstPoint.x - lastPoint.x) + 1) < shipNums[Math.abs(firstPoint.x - lastPoint.x)-1]))) {
                     drawShip(firstPoint, lastPoint);
-                    board.addOneToShipCounter();
                     if (shipLengths.size() == numberOfShips) {
                         System.out.println("Minden hajó el lett helyezve.");
                     }
@@ -265,6 +349,7 @@ public class TorpedoGame extends JPanel implements ActionListener, MouseListener
 
     public static void setShipLen(int num, int idx){
         shipNums[idx] = num;
+        System.out.println("Most beállította a " + (idx+2) + " hosszú hajók számát " + num + "-ra");
     }
 
     public static boolean between(int value, int min, int max) {
@@ -283,7 +368,31 @@ public class TorpedoGame extends JPanel implements ActionListener, MouseListener
         return computer;
     }
 
+    public static int getGridSizeHorizontal() {
+        return gridSizeHorizontal;
+    }
+
+    public static int getGridSizeVertical() {
+        return gridSizeVertical;
+    }
+
     public Entity getPlayer() {
         return player;
+    }
+
+    public void setPlayer(Player player) {
+        this.player = player;
+    }
+
+    public void setComputer(Computer computer) {
+        this.computer = computer;
+    }
+
+    public void setShipLengths(List<Integer> shipLengths) {
+        this.shipLengths = shipLengths;
+    }
+
+    public void setAlreadyPlacedShipsNum(int alreadyPlacedShipsNum) {
+        this.alreadyPlacedShipsNum = alreadyPlacedShipsNum;
     }
 }

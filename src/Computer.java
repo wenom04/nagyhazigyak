@@ -3,7 +3,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
 
-public class Computer extends Entity{
+public class Computer extends Entity {
+    private Point lastHit;
+
     public Computer(int gridSizeHorizontal, int gridSizeVertical) {
         super(gridSizeHorizontal, gridSizeVertical);
     }
@@ -71,56 +73,48 @@ public class Computer extends Entity{
     }
 
     @Override
-    public Point randomShot(Entity p, int gridSizeHorizontal, int gridSizeVertical, boolean wasHit) {
-        Point botShot;
-        int botRandomX;
-        int botRandomY;
-        Random rand = new Random();
-        do {
-            botRandomX = rand.nextInt(gridSizeHorizontal);
-            botRandomY = rand.nextInt(gridSizeVertical);
-            botShot = new Point(botRandomX, botRandomY);
-        } while (this.clickedPoints.contains(botShot));
-        this.clickedPoints.add(botShot);
-
-        if (p.ships[botRandomX][botRandomY] && !this.shots[botRandomX][botRandomY]) {
+    public Point randomShot(Entity p, int gridSizeHorizontal, int gridSizeVertical) {
+        if(lastHit == null) {
+            Point botShot;
+            int botRandomX;
+            int botRandomY;
+            Random rand = new Random();
+            do {
+                botRandomX = rand.nextInt(gridSizeHorizontal);
+                botRandomY = rand.nextInt(gridSizeVertical);
+                botShot = new Point(botRandomX, botRandomY);
+            } while (this.clickedPoints.contains(botShot));
+            this.clickedPoints.add(botShot);
+            if (p.ships[botRandomX][botRandomY] && !this.shots[botRandomX][botRandomY]) {
+                lastHit = botShot;
+            }
             this.shots[botRandomX][botRandomY] = true;
-            wasHit = true;
             return botShot;
         }
-        return null;
+        else{
+            return targetedShot(p,gridSizeHorizontal, gridSizeVertical);
+        }
     }
 
     @Override
-    public Point targetedShot(Entity player, Point p, int gridSizeHorizontal, int gridSizeVertical) {
+    public Point targetedShot(Entity player, int gridSizeHorizontal, int gridSizeVertical) {
         ArrayList<Point> possibleShots = new ArrayList<>();
-        if(p.x - 1 >= 0) {
-            possibleShots.add(new Point(p.x - 1, p.y));
+        if(lastHit.x - 1 >= 0 && !this.shots[lastHit.x - 1][lastHit.y]) {
+            possibleShots.add(new Point(lastHit.x - 1, lastHit.y));
         }
-        if(p.x + 1 < gridSizeHorizontal) {
-            possibleShots.add(new Point(p.x + 1, p.y));
+        if(lastHit.x + 1 < gridSizeHorizontal && !this.shots[lastHit.x + 1][lastHit.y]) {
+            possibleShots.add(new Point(lastHit.x + 1, lastHit.y));
         }
-        if(p.y - 1 >= 0) {
-            possibleShots.add(new Point(p.x, p.y - 1));
+        if(lastHit.y - 1 >= 0 && !this.shots[lastHit.x][lastHit.y - 1]) {
+            possibleShots.add(new Point(lastHit.x, lastHit.y - 1));
         }
-        if(p.y + 1 < gridSizeVertical) {
-            possibleShots.add(new Point(p.x, p.y + 1));
+        if(lastHit.y + 1 < gridSizeVertical && !this.shots[lastHit.x][lastHit.y + 1]) {
+            possibleShots.add(new Point(lastHit.x, lastHit.y + 1));
         }
 
         Collections.shuffle(possibleShots);
-
-        for(Point point : possibleShots) {
-            if(!this.clickedPoints.contains(point)) {
-                this.clickedPoints.add(point);
-                if(player.ships[point.x][point.y]) {
-                    this.shots[point.x][point.y] = true;
-                    return new Point(point.x, point.y);
-                }
-                else{
-                    return p;
-                }
-            }
-        }
-        return null;
+        this.clickedPoints.add(possibleShots.get(0));
+        lastHit = null;
+        return possibleShots.get(0);
     }
 }

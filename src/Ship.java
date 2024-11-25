@@ -1,8 +1,7 @@
 import java.awt.*;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
-public class Ship {
+public class Ship implements java.io.Serializable {
     private boolean isSunk;
     private ArrayList<Point> coordinates;
     public Ship(ArrayList<Point> coordinates) {

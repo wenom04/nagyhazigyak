@@ -1,6 +1,7 @@
-import java.awt.*;
-import java.awt.event.*;
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class LaunchPage extends JPanel implements ActionListener {
     boolean visible = true;
@@ -121,7 +122,21 @@ public class LaunchPage extends JPanel implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         String s;
         if(e.getSource()==myButton) {
-            this.pageRefresh(frame);
+            pageRefresh(frame);
+        }
+        if(e.getSource()==loadGame) {
+            FileHandler fileHandler = FileHandler.loadGame();
+            TorpedoGame.setGridSizeHorizontal(fileHandler.getGridSizeHorizontal());
+            TorpedoGame.setGridSizeVertical(fileHandler.getGridSizeVertical());
+            TorpedoGame.setShipLen(fileHandler.shipNums[0], 0);
+            TorpedoGame.setShipLen(fileHandler.shipNums[1], 1);
+            TorpedoGame.setShipLen(fileHandler.shipNums[2], 2);
+            TorpedoGame.setShipLen(fileHandler.shipNums[3], 3);
+            TorpedoGame game = new TorpedoGame(frame, fileHandler.player, fileHandler.computer);
+            game.setAlreadyPlacedShipsNum(fileHandler.alreadyPlacedShipsNum);
+            game.setShipLengths(fileHandler.alreadyPlacedShips);
+            game.setMaxShipLength(fileHandler.maxLength);
+            pageFunction.pageRefresher(frame, game);
         }
         if(e.getSource()==myComboBox) {
             s = myComboBox.getSelectedItem().toString();
@@ -138,6 +153,7 @@ public class LaunchPage extends JPanel implements ActionListener {
                 maxLength = Math.max(maxLength, 2);
             }
             TorpedoGame.setShipLen(Integer.parseInt(s),0);
+            System.out.println("Ship 2: " + s);
             wereShipsSelected = true;
         }
         if(e.getSource()==ship3Num) {
@@ -146,6 +162,7 @@ public class LaunchPage extends JPanel implements ActionListener {
                 maxLength = Math.max(maxLength, 3);
             }
             TorpedoGame.setShipLen(Integer.parseInt(s),1);
+            System.out.println("Ship 3: " + s);
             wereShipsSelected = true;
         }
         if(e.getSource()==ship4Num) {
@@ -154,6 +171,7 @@ public class LaunchPage extends JPanel implements ActionListener {
                 maxLength = Math.max(maxLength, 4);
             }
             TorpedoGame.setShipLen(Integer.parseInt(s),2);
+            System.out.println("Ship 4: " + s);
             wereShipsSelected = true;
         }
         if(e.getSource()==ship5Num) {
@@ -162,6 +180,7 @@ public class LaunchPage extends JPanel implements ActionListener {
                 maxLength = Math.max(maxLength, 5);
             }
             TorpedoGame.setShipLen(Integer.parseInt(s),3);
+            System.out.println("Ship 5: " + s);
             wereShipsSelected = true;
         }
     }
@@ -183,9 +202,8 @@ public class LaunchPage extends JPanel implements ActionListener {
         }
         TorpedoGame game = new TorpedoGame(frame);
         game.setMaxShipLength(maxLength);
+        System.out.println("Max ship length: " + maxLength);
         pageFunction.pageRefresher(frame, game);
     }
-
-    
 }
 

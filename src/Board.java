@@ -76,11 +76,16 @@ public class Board extends JPanel {
             // de itt csak 30-at kell hozzáadni
             int centerY = gridSize + p.y * gridSize + gridSize/2;
 
-            if (computer.ships[p.x][p.y] && !player.shots[p.x][p.y]) {
-//                foundShips++;
-//                System.out.println("Found ships: " + foundShips);
-                player.shots[p.x][p.y] = true;
-            }
+//            if (computer.ships[p.x][p.y] && !player.shots[p.x][p.y]) {
+////                foundShips++;
+////                System.out.println("Found ships: " + foundShips);
+//                player.shots[p.x][p.y] = true;
+//            }
+//            else{
+//                player.misses[p.x][p.y] = true;
+//            }
+
+            player.shots[p.x][p.y] = true;
 
             if (computer.ships[p.x][p.y]) {
                 g.setColor(Color.RED);
@@ -96,23 +101,28 @@ public class Board extends JPanel {
         boolean wasHit = false;
 
         if (shipCounter == numberOfShips) {
-            computer.randomShot(player, gridSizeHorizontal, gridSizeVertical, wasHit);
-
+            if(!game.wasLastRemoved) {
+                lastHit = computer.randomShot(player, gridSizeHorizontal, gridSizeVertical);
+            }
             game.checkAllShips(computer, player);
             game.checkAllShips(player, computer);
         }
 
 
-        for(int i = 0; i < 10; i++) {
-            for(int j = 0; j < 10; j++) {
+        for(int i = 0; i < gridSizeHorizontal; i++) {
+            for(int j = 0; j < gridSizeVertical; j++) {
                 if(player.ships[i][j]) {
                     g.setColor(Color.GRAY);
                     g.fillRect(i * gridSize + gridSize, j * gridSize + gridSize, gridSize, gridSize);
+                    g.setColor(Color.WHITE);
+                    g.drawRect(i * gridSize + gridSize, j * gridSize + gridSize, gridSize, gridSize);
                 }
-//                if(computer.ships[i][j]) {
-//                    g.setColor(Color.GRAY);
-//                    g.fillRect(i * gridSize + (gridSizeHorizontal+2) * gridSize, j * gridSize + gridSize, gridSize, gridSize);
-//                }
+                if(computer.ships[i][j]) {
+                    g.setColor(Color.GRAY);
+                    g.fillRect(i * gridSize + (gridSizeHorizontal+2) * gridSize, j * gridSize + gridSize, gridSize, gridSize);
+                    g.setColor(Color.WHITE);
+                    g.drawRect(i * gridSize + (gridSizeHorizontal+2) * gridSize, j * gridSize + gridSize, gridSize, gridSize);
+                }
             }
         }
 
@@ -128,9 +138,11 @@ public class Board extends JPanel {
             g.fillOval(centerX - gridSize / 6, centerY - gridSize / 6, gridSize / 3, gridSize / 3);
         }
         if(game.areAllShipsSunk(game.getComputer()) && !player.clickedPoints.isEmpty() && !computer.shipsList.isEmpty()) {
-            JOptionPane.showMessageDialog(null, "You won!");
+            JOptionPane.showMessageDialog(null, "Nyertél!", "Game over", JOptionPane.OK_OPTION);
+            System.exit(0);
         } else if (game.areAllShipsSunk(game.getPlayer()) && !player.clickedPoints.isEmpty()) {
-            JOptionPane.showMessageDialog(null, "You lost!", "Game over", JOptionPane.OK_OPTION);
+            JOptionPane.showMessageDialog(null, "Sajnos vesztettél!", "Game over", JOptionPane.OK_OPTION);
+            System.exit(0);
         }
     }
 
