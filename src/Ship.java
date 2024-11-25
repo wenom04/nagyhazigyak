@@ -4,6 +4,11 @@ import java.util.ArrayList;
 public class Ship implements java.io.Serializable {
     private boolean isSunk;
     private ArrayList<Point> coordinates;
+
+    /**
+     * Konstruktor
+     * @param coordinates Egy lista, ami a hajó koordinátáit tartalmazza
+     */
     public Ship(ArrayList<Point> coordinates) {
         this.coordinates = coordinates;
         this.isSunk = false;
@@ -21,7 +26,8 @@ public class Ship implements java.io.Serializable {
         isSunk = true;
     }
 
-    public int getLength(){
+    public int getLength() {
         return coordinates.size();
     }
+
 }

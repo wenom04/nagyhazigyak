@@ -1,5 +1,4 @@
 import java.io.*;
-import java.util.ArrayList;
 import java.util.List;
 
 public class FileHandler implements Serializable {
@@ -9,8 +8,19 @@ public class FileHandler implements Serializable {
     int gridSizeVertical;
     int maxLength;
     int[] shipNums;
-    List<Integer> alreadyPlacedShips = new ArrayList<>();
-    int alreadyPlacedShipsNum;
+    //List<Integer> alreadyPlacedShips = new ArrayList<>();
+    //int alreadyPlacedShipsNum;
+    /**
+     * Konstruktor
+     * @param player a játékos
+     * @param computer a számítógép
+     * @param gridSizeHorizontal a játéktér szélessége
+     * @param gridSizeVertical a játéktér magassága
+     * @param maxLength a leghosszabb hajó hossza
+     * @param shipNums a hajók száma
+     * @param alreadyPlacedShips a már elhelyezett hajók
+     * @param alreadyPlacedShipsNum a már elhelyezett hajók száma
+     */
     public FileHandler(Player player, Computer computer, int gridSizeHorizontal,
                        int gridSizeVertical, int maxLength, int[] shipNums, List<Integer> alreadyPlacedShips, int alreadyPlacedShipsNum) {
         this.player = player;
@@ -19,9 +29,13 @@ public class FileHandler implements Serializable {
         this.gridSizeVertical = gridSizeVertical;
         this.maxLength = maxLength;
         this.shipNums = shipNums;
-        this.alreadyPlacedShips = alreadyPlacedShips;
-        this.alreadyPlacedShipsNum = alreadyPlacedShipsNum;
+        //this.alreadyPlacedShips = alreadyPlacedShips;
+        //this.alreadyPlacedShipsNum = alreadyPlacedShipsNum;
     }
+    /**
+     * Elmenti a játékot game_state.ser fájlba
+     * @param gamestate a játék állapota
+     */
     public static void saveGame(FileHandler gamestate) {
         try {
             FileOutputStream f =
@@ -35,6 +49,10 @@ public class FileHandler implements Serializable {
         }
     }
 
+    /**
+     * Betölti a játékot game_state.ser fájlból
+     * @return a betöltött játék
+     */
     public static FileHandler loadGame() {
         try {
             FileInputStream f =

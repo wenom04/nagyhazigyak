@@ -128,13 +128,13 @@ public class LaunchPage extends JPanel implements ActionListener {
             FileHandler fileHandler = FileHandler.loadGame();
             TorpedoGame.setGridSizeHorizontal(fileHandler.getGridSizeHorizontal());
             TorpedoGame.setGridSizeVertical(fileHandler.getGridSizeVertical());
-            TorpedoGame.setShipLen(fileHandler.shipNums[0], 0);
-            TorpedoGame.setShipLen(fileHandler.shipNums[1], 1);
-            TorpedoGame.setShipLen(fileHandler.shipNums[2], 2);
-            TorpedoGame.setShipLen(fileHandler.shipNums[3], 3);
+            //TorpedoGame.setShipLen(fileHandler.shipNums[0], 0);
+            //TorpedoGame.setShipLen(fileHandler.shipNums[1], 1);
+            //TorpedoGame.setShipLen(fileHandler.shipNums[2], 2);
+            //TorpedoGame.setShipLen(fileHandler.shipNums[3], 3);
             TorpedoGame game = new TorpedoGame(frame, fileHandler.player, fileHandler.computer);
-            game.setAlreadyPlacedShipsNum(fileHandler.alreadyPlacedShipsNum);
-            game.setShipLengths(fileHandler.alreadyPlacedShips);
+            //game.setAlreadyPlacedShipsNum(fileHandler.alreadyPlacedShipsNum);
+            //game.setShipLengths(fileHandler.alreadyPlacedShips);
             game.setMaxShipLength(fileHandler.maxLength);
             pageFunction.pageRefresher(frame, game);
         }
@@ -195,6 +195,10 @@ public class LaunchPage extends JPanel implements ActionListener {
         return visible;
     }
 
+    /**
+     * Frissíti az ablakot
+     * @param frame az ablak, amit frissíteni kell
+     */
     public void pageRefresh(JFrame frame){
         if (!wereShipsSelected){
             JOptionPane.showMessageDialog(frame, "Válassz ki legalább egy hajót!", "Hiba", JOptionPane.ERROR_MESSAGE);

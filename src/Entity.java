@@ -8,6 +8,11 @@ public abstract class Entity implements Serializable {
     ArrayList<Point> clickedPoints = new ArrayList<>();
     ArrayList<Ship> shipsList = new ArrayList<>();
 
+    /**
+     * Konstruktor
+     * @param gridSizeHorizontal a játéktér szélessége
+     * @param gridSizeVertical a játéktér magassága
+     */
     public Entity(int gridSizeHorizontal, int gridSizeVertical) {
         ships = new boolean[gridSizeHorizontal][gridSizeVertical];
         shots = new boolean[gridSizeHorizontal][gridSizeVertical];

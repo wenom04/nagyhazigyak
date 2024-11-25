@@ -10,6 +10,12 @@ public class Computer extends Entity {
         super(gridSizeHorizontal, gridSizeVertical);
     }
 
+    /**
+     * A hajók elhelyezése a játéktéren
+     * @param shipNums a hajók száma a hosszuk szerint
+     * @param gridSizeHorizontal a játéktér szélessége
+     * @param gridSizeVertical a játéktér magassága
+     */
     @Override
     public void placeShips(int[] shipNums, int gridSizeHorizontal, int gridSizeVertical) {
         Random rand = new Random();
@@ -33,6 +39,16 @@ public class Computer extends Entity {
         }
     }
 
+    /**
+     * Ellenőrzi, hogy el lehet-e helyezni a hajót a megadott helyen
+     * @param x a hajó első cellájának x koordinátája
+     * @param y a hajó első cellájának y koordinátája
+     * @param size a hajó hossza
+     * @param horizontal a hajó vízszintes-e
+     * @param gridSizeHorizontal a játéktér szélessége
+     * @param gridSizeVertical a játéktér magassága
+     * @return true, ha el lehet helyezni a hajót, false egyébként
+     */
     private boolean canPlaceShip(int x, int y, int size, boolean horizontal, int gridSizeHorizontal, int gridSizeVertical) {
         if (horizontal) {
             if (x + size > gridSizeHorizontal){
@@ -56,6 +72,13 @@ public class Computer extends Entity {
         return true;
     }
 
+    /**
+     * Elhelyezi a hajót a megadott helyen
+     * @param x a hajó első cellájának x koordinátája
+     * @param y a hajó első cellájának y koordinátája
+     * @param size a hajó hossza
+     * @param horizontal a hajó vízszintes-e
+     */
     private void placeShip(int x, int y, int size, boolean horizontal) {
         ArrayList<Point> coordinates = new ArrayList<>();
         if (horizontal) {
@@ -72,6 +95,13 @@ public class Computer extends Entity {
         shipsList.add(new Ship(coordinates));
     }
 
+    /**
+     * Véletlenszerű lövés
+     * @param p a játékos
+     * @param gridSizeHorizontal a játéktér szélessége
+     * @param gridSizeVertical a játéktér magassága
+     * @return a lövés koordinátái
+     */
     @Override
     public Point randomShot(Entity p, int gridSizeHorizontal, int gridSizeVertical) {
         if(lastHit == null) {
@@ -96,6 +126,13 @@ public class Computer extends Entity {
         }
     }
 
+    /**
+     * Célozott lövés
+     * @param player a játékos
+     * @param gridSizeHorizontal a játéktér szélessége
+     * @param gridSizeVertical a játéktér magassága
+     * @return a lövés koordinátái
+     */
     @Override
     public Point targetedShot(Entity player, int gridSizeHorizontal, int gridSizeVertical) {
         ArrayList<Point> possibleShots = new ArrayList<>();

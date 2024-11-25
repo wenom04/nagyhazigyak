@@ -15,10 +15,11 @@ public class TorpedoGame extends JPanel implements ActionListener, MouseListener
     //Ne vonhasson vissza a játékos egymás után többször, csak egyszer
     private int clickCount = 0;
 
+    private int clickCountSum = 0;
+
     //Menüpontok
     JMenuItem newGame = new JMenuItem("Új játék");
     JMenuItem saveGame = new JMenuItem("Mentés");
-    JMenuItem loadGame = new JMenuItem("Betöltés");
 
     //Menü
     JMenu menu = new JMenu("Menü");
@@ -109,6 +110,7 @@ public class TorpedoGame extends JPanel implements ActionListener, MouseListener
             if (!ship.isSunk() && isShipSunk(ship, e2)) {
                 numberOfShips--;
                 ship.setSunk();
+                System.out.println("Egy "+ ship.getLength() + " hosszú hajó elsüllyedt. Még " + numberOfShips + " hajó van hátra.");
             }
         }
     }
@@ -157,7 +159,7 @@ public class TorpedoGame extends JPanel implements ActionListener, MouseListener
 
     /**
      * A játék konstruktora, a játék elindításához szükséges inicializálásokat végzi, visszaállított játék esetén kell használni
-     * @param frame a frame, amiben a játék fut
+     * @param frame az ablak, amiben a játék fut
      * @param player a játékos
      * @param computer a gép
      */
@@ -170,7 +172,7 @@ public class TorpedoGame extends JPanel implements ActionListener, MouseListener
 
     /**
      * A játék konstruktora, a játék elindításához szükséges inicializálásokat végzi, új játék kezdésekor kell használni
-     * @param frame a frame, amiben a játék fut
+     * @param frame az ablak, amiben a játék fut
      */
     public TorpedoGame(JFrame frame){
         this.frame = frame;
@@ -205,13 +207,10 @@ public class TorpedoGame extends JPanel implements ActionListener, MouseListener
         newGame.addActionListener(this);
         saveGame.setActionCommand("saveGame");
         saveGame.addActionListener(this);
-        loadGame.setActionCommand("loadGame");
-        loadGame.addActionListener(this);
 
 
         menu.add(newGame);
         menu.add(saveGame);
-        menu.add(loadGame);
 
         JMenuBar bar = new JMenuBar();
         bar.add(menu);
@@ -240,11 +239,15 @@ public class TorpedoGame extends JPanel implements ActionListener, MouseListener
             System.exit(0);
         }
         if(e.getSource()==backspace) {
-            if(!player.clickedPoints.isEmpty() && !wasLastRemoved){
+            if(!player.clickedPoints.isEmpty() && !wasLastRemoved && clickCountSum < 4){
                 Point last = player.clickedPoints.getLast();
                 player.clickedPoints.remove(last);
                 repaint();
                 wasLastRemoved = true;
+                clickCountSum++;
+            }
+            else{
+                System.out.println("Nem tudsz visszavonni.");
             }
         }
     }
@@ -303,7 +306,7 @@ public class TorpedoGame extends JPanel implements ActionListener, MouseListener
                     }
                 }
                 else{
-                    System.out.println("Igy nem lehet hajot elhelyezni te kis buzi!");
+                    System.out.println("Így nem lehet hajót elhelyezni!");
                     player.ships[firstPoint.x][firstPoint.y] = false;
                 }
                 firstPoint = null;
@@ -336,6 +339,11 @@ public class TorpedoGame extends JPanel implements ActionListener, MouseListener
         maxLength = Math.max(maxShipLength, maxLength);
     }
 
+    /**
+     * A hajók számát adja vissza a hosszuk alapján
+     * @param len a hajó hossza
+     * @return a hajók száma
+     */
     public int getShipNumByLen(int len){
         //System.out.println(len);
         int count = 0;
@@ -349,9 +357,14 @@ public class TorpedoGame extends JPanel implements ActionListener, MouseListener
 
     public static void setShipLen(int num, int idx){
         shipNums[idx] = num;
-        System.out.println("Most beállította a " + (idx+2) + " hosszú hajók számát " + num + "-ra");
     }
 
+    /**
+        *Megnézi, hogy egy adott érték egy intervallumban van-e
+     * @param value az érték
+     * @param min az intervallum alsó határa
+     * @param max az intervallum felső határa
+     */
     public static boolean between(int value, int min, int max) {
         return value >= min && value < max;
     }
@@ -368,24 +381,9 @@ public class TorpedoGame extends JPanel implements ActionListener, MouseListener
         return computer;
     }
 
-    public static int getGridSizeHorizontal() {
-        return gridSizeHorizontal;
-    }
-
-    public static int getGridSizeVertical() {
-        return gridSizeVertical;
-    }
 
     public Entity getPlayer() {
         return player;
-    }
-
-    public void setPlayer(Player player) {
-        this.player = player;
-    }
-
-    public void setComputer(Computer computer) {
-        this.computer = computer;
     }
 
     public void setShipLengths(List<Integer> shipLengths) {

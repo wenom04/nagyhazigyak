@@ -1,6 +1,5 @@
 import javax.swing.*;
 import java.awt.*;
-import java.util.Random;
 
 public class Board extends JPanel {
     private int gridSize;
@@ -23,6 +22,11 @@ public class Board extends JPanel {
         //System.out.println("Number of ships: L" + numberOfShips);
     }
 
+    /**
+     * Kirajzolja a négyzetrácsokat
+     * @param g a grafikus felület
+     * @param isOnRight a négyzetrács jobb oldalon van-e, ez azért kell, mert arrébb kell rajzolni a betűket és számokat
+     */
     private void drawGrid(Graphics g, boolean isOnRight){
         int fromGridX = gridSize;
         int toGridX = gridSizeHorizontal*gridSize;
@@ -62,9 +66,9 @@ public class Board extends JPanel {
         drawGrid(g, true);
 
 
-        int botRandomX;
-        int botRandomY;
-        Random rand = new Random();
+        //int botRandomX;
+        //int botRandomY;
+        //Random rand = new Random();
 
 
         for (Point p : player.clickedPoints) {
@@ -97,12 +101,15 @@ public class Board extends JPanel {
 
 
         }
-        Point lastHit = new Point();
-        boolean wasHit = false;
+        //Point lastHit = new Point();
+        //boolean wasHit = false;
 
         if (shipCounter == numberOfShips) {
             if(!game.wasLastRemoved) {
-                lastHit = computer.randomShot(player, gridSizeHorizontal, gridSizeVertical);
+                computer.randomShot(player, gridSizeHorizontal, gridSizeVertical);
+                System.out.println("Lőttem");
+                System.out.println(numberOfShips);
+                System.out.println(shipCounter);
             }
             game.checkAllShips(computer, player);
             game.checkAllShips(player, computer);
